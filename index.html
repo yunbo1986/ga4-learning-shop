@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A simple demo shop for learning GA4 and Google Tag Manager events.">
+  <title>GA4 Learning Shop</title>
+
+  <!--
+    GA4 / GTM SETUP AREA
+    ---------------------------------------------------------------
+    No real Measurement ID or Container ID is installed in this file.
+
+    Later, paste your GTM container snippet immediately after <head>,
+    then paste the GTM <noscript> snippet immediately after <body>.
+
+    This demo already pushes structured events to window.dataLayer:
+    view_item_list, select_item, view_item, add_to_cart,
+    begin_checkout, purchase, and generate_lead.
+  -->
+
+  <style>
+    :root {
+      --ink: #18212f;
+      --muted: #647084;
+      --paper: #f6f7f3;
+      --card: #ffffff;
+      --line: #dfe3dc;
+      --brand: #375c4b;
+      --brand-dark: #244437;
+      --accent: #f1b768;
+      --accent-soft: #fae8c8;
+      --danger: #a64444;
+      --shadow: 0 18px 44px rgba(34, 50, 42, 0.10);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+
+    .container {
+      width: min(1120px, calc(100% - 40px));
+      margin-inline: auto;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(223, 227, 220, 0.9);
+      background: rgba(246, 247, 243, 0.88);
+      backdrop-filter: blur(14px);
+    }
+
+    .nav {
+      min-height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      color: white;
+      background: var(--brand);
+      box-shadow: 0 7px 18px rgba(55, 92, 75, 0.22);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .nav-links > a {
+      color: var(--muted);
+      font-size: 0.94rem;
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    .cart-button {
+      min-height: 42px;
+      padding: 8px 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--ink);
+      background: white;
+      font-weight: 750;
+    }
+
+    .cart-count {
+      min-width: 23px;
+      height: 23px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: white;
+      background: var(--brand);
+      font-size: 0.75rem;
+    }
+
+    .hero {
+      padding: 88px 0 68px;
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      align-items: center;
+      gap: 70px;
+    }
+
+    .eyebrow {
+      margin: 0 0 15px;
+      color: var(--brand);
+      font-size: 0.78rem;
+      font-weight: 850;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 720px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(3rem, 7vw, 5.7rem);
+      font-weight: 500;
+      letter-spacing: -0.055em;
+      line-height: 0.97;
+    }
+
+    .hero-copy {
+      max-width: 590px;
+      margin: 26px 0 32px;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    .button-row { display: flex; flex-wrap: wrap; gap: 12px; }
+
+    .button {
+      min-height: 48px;
+      padding: 12px 19px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid transparent;
+      border-radius: 13px;
+      font-weight: 800;
+      text-decoration: none;
+      transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+    }
+
+    .button:hover { transform: translateY(-2px); }
+    .button:focus-visible, .cart-button:focus-visible, .icon-button:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 3px solid rgba(241, 183, 104, 0.65);
+      outline-offset: 2px;
+    }
+
+    .button-primary { color: white; background: var(--brand); }
+    .button-primary:hover { background: var(--brand-dark); }
+    .button-secondary { border-color: var(--line); color: var(--ink); background: white; }
+    .button-full { width: 100%; }
+
+    .hero-art {
+      min-height: 440px;
+      position: relative;
+      display: grid;
+      place-items: center;
+    }
+
+    .orb {
+      position: absolute;
+      width: 380px;
+      height: 380px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+    }
+
+    .hero-card {
+      width: min(330px, 86%);
+      min-height: 360px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 29px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 30px;
+      color: white;
+      background: linear-gradient(145deg, #436a57, #203f33);
+      box-shadow: 0 30px 70px rgba(32, 63, 51, 0.25);
+      transform: rotate(4deg);
+    }
+
+    .hero-icon { font-size: 6.4rem; filter: drop-shadow(0 18px 16px rgba(0,0,0,.15)); }
+    .hero-card strong { display: block; font-family: Georgia, serif; font-size: 1.65rem; font-weight: 500; }
+    .hero-card span { color: rgba(255,255,255,.72); }
+
+    .floating-note {
+      position: absolute;
+      right: -8px;
+      bottom: 34px;
+      padding: 12px 16px;
+      border-radius: 13px;
+      background: white;
+      box-shadow: var(--shadow);
+      font-size: 0.83rem;
+      font-weight: 800;
+      transform: rotate(-3deg);
+    }
+
+    section { padding: 78px 0; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 32px; }
+    h2 { margin: 0; font-family: Georgia, serif; font-size: clamp(2.15rem, 4vw, 3.25rem); font-weight: 500; letter-spacing: -0.04em; }
+    .section-copy { max-width: 520px; margin: 10px 0 0; color: var(--muted); }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .product-card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: 0 3px 0 rgba(35, 54, 44, 0.02);
+    }
+
+    .product-visual {
+      min-height: 230px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      font-size: 5rem;
+    }
+
+    .visual-1 { background: #dfeae1; }
+    .visual-2 { background: #f4e4cf; }
+    .visual-3 { background: #e3e5ee; }
+    .product-body { padding: 18px 4px 4px; }
+    .product-meta { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+    .product-name { margin: 0; font-size: 1.12rem; }
+    .product-price { font-weight: 850; }
+    .product-description { min-height: 48px; margin: 8px 0 18px; color: var(--muted); font-size: 0.93rem; }
+    .product-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .product-actions .button { min-height: 44px; padding: 10px 11px; font-size: 0.87rem; }
+
+    .learning-strip {
+      padding: 30px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      border-radius: 25px;
+      color: white;
+      background: var(--brand-dark);
+    }
+
+    .learning-item strong { display: block; margin-bottom: 4px; color: var(--accent); font-size: 0.8rem; letter-spacing: .08em; text-transform: uppercase; }
+    .learning-item span { color: rgba(255,255,255,.76); font-size: .91rem; }
+
+    .contact-wrap {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 48px;
+      padding: 48px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: white;
+      box-shadow: var(--shadow);
+    }
+
+    .contact-copy p { color: var(--muted); }
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    label { display: block; margin-bottom: 6px; font-size: 0.82rem; font-weight: 800; }
+    input, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      color: var(--ink);
+      background: #fbfcfa;
+    }
+    input { height: 46px; padding: 0 13px; }
+    textarea { min-height: 122px; padding: 12px 13px; resize: vertical; }
+    .field { margin-bottom: 14px; }
+    .form-status { min-height: 24px; margin: 11px 0 0; color: var(--brand); font-size: .9rem; font-weight: 700; }
+
+    footer { padding: 35px 0 45px; color: var(--muted); font-size: .88rem; }
+    .footer-inner { display: flex; justify-content: space-between; gap: 20px; border-top: 1px solid var(--line); padding-top: 26px; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(18, 28, 23, 0.62);
+      backdrop-filter: blur(7px);
+    }
+    .overlay.open { display: flex; }
+
+    .modal {
+      width: min(600px, 100%);
+      max-height: calc(100vh - 40px);
+      overflow: auto;
+      position: relative;
+      padding: 28px;
+      border-radius: 24px;
+      background: white;
+      box-shadow: 0 30px 80px rgba(0,0,0,.27);
+    }
+
+    .icon-button {
+      width: 40px;
+      height: 40px;
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: var(--ink);
+      background: white;
+      font-size: 1.25rem;
+    }
+
+    .modal-product { display: grid; grid-template-columns: .8fr 1.2fr; gap: 24px; align-items: center; }
+    .modal-visual { min-height: 240px; display: grid; place-items: center; border-radius: 18px; background: var(--accent-soft); font-size: 6rem; }
+    .modal h3 { margin: 0 38px 8px 0; font-family: Georgia, serif; font-size: 2rem; font-weight: 500; }
+    .modal p { color: var(--muted); }
+
+    .cart-list { display: grid; gap: 11px; margin: 22px 0; }
+    .cart-item { display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: 12px; padding: 11px; border-radius: 13px; background: var(--paper); }
+    .cart-item-icon { font-size: 1.65rem; text-align: center; }
+    .cart-item small { display: block; color: var(--muted); }
+    .remove-button { border: 0; color: var(--danger); background: transparent; font-weight: 750; }
+    .cart-total { display: flex; justify-content: space-between; padding: 16px 0; border-top: 1px solid var(--line); font-size: 1.08rem; }
+    .empty-cart { padding: 32px 0; color: var(--muted); text-align: center; }
+
+    .thank-you { padding: 22px 4px 8px; text-align: center; }
+    .success-mark { width: 76px; height: 76px; margin: 0 auto 18px; display: grid; place-items: center; border-radius: 50%; color: white; background: var(--brand); font-size: 2.25rem; }
+    .order-summary { margin: 20px 0; padding: 16px; border-radius: 13px; background: var(--paper); text-align: left; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      z-index: 70;
+      padding: 11px 16px;
+      border-radius: 999px;
+      color: white;
+      background: var(--ink);
+      box-shadow: var(--shadow);
+      font-size: .88rem;
+      font-weight: 750;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 12px);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 820px) {
+      .hero-grid, .contact-wrap { grid-template-columns: 1fr; }
+      .hero { padding-top: 62px; }
+      .hero-art { min-height: 360px; }
+      .products { grid-template-columns: 1fr; }
+      .product-description { min-height: auto; }
+      .learning-strip { grid-template-columns: 1fr; }
+      .contact-wrap { padding: 30px; }
+    }
+
+    @media (max-width: 560px) {
+      .container { width: min(100% - 24px, 1120px); }
+      .nav-links > a { display: none; }
+      .hero { padding: 52px 0 38px; }
+      .hero-art { min-height: 330px; }
+      .orb { width: 290px; height: 290px; }
+      .hero-card { min-height: 300px; }
+      .section-head, .footer-inner { align-items: start; flex-direction: column; }
+      .field-grid, .modal-product { grid-template-columns: 1fr; }
+      .modal-visual { min-height: 180px; }
+      .contact-wrap { padding: 22px; }
+      section { padding: 58px 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Paste the GTM <noscript> snippet here later. -->
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="#home" aria-label="GA4 Learning Shop home">
+        <span class="brand-mark" aria-hidden="true">G4</span>
+        <span>GA4 Learning Shop</span>
+      </a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="#products">Products</a>
+        <a href="#contact">Contact</a>
+        <button class="cart-button" id="openCart" type="button" aria-label="Open shopping cart">
+          Cart <span class="cart-count" id="cartCount">0</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="home">
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <p class="eyebrow">A safe place to practice analytics</p>
+          <h1>Learn GA4 by doing.</h1>
+          <p class="hero-copy">Click, add, submit, and buy your way through a tiny demo store built for hands-on GA4 and Google Tag Manager practice.</p>
+          <div class="button-row">
+            <a class="button button-primary" href="#products">Explore products</a>
+            <a class="button button-secondary" href="#contact">Try the form</a>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="orb"></div>
+          <div class="hero-card">
+            <span>Practice product</span>
+            <div class="hero-icon">🪴</div>
+            <div><strong>Small actions.</strong><span>Useful data.</span></div>
+          </div>
+          <div class="floating-note">✓ dataLayer ready</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="products">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Demo catalog</p>
+            <h2>Pick a practice product</h2>
+            <p class="section-copy">Every product action creates a clean ecommerce event you can inspect later in GTM Preview and GA4 DebugView.</p>
+          </div>
+        </div>
+
+        <div class="products" id="productGrid" aria-label="Product list"></div>
+      </div>
+    </section>
+
+    <section aria-label="Learning guide">
+      <div class="container learning-strip">
+        <div class="learning-item"><strong>Step 01</strong><span>Open a product to practice <code>select_item</code> and <code>view_item</code>.</span></div>
+        <div class="learning-item"><strong>Step 02</strong><span>Add something to the cart to practice <code>add_to_cart</code>.</span></div>
+        <div class="learning-item"><strong>Step 03</strong><span>Complete the demo order to practice <code>begin_checkout</code> and <code>purchase</code>.</span></div>
+      </div>
+    </section>
+
+    <section id="contact">
+      <div class="container contact-wrap">
+        <div class="contact-copy">
+          <p class="eyebrow">Lead generation practice</p>
+          <h2>Send a demo message</h2>
+          <p>This form does not send data anywhere. It simply creates a <code>generate_lead</code> event in the local dataLayer.</p>
+        </div>
+        <form id="contactForm">
+          <div class="field-grid">
+            <div class="field">
+              <label for="name">Name</label>
+              <input id="name" name="name" autocomplete="name" required placeholder="Alex Chen">
+            </div>
+            <div class="field">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" autocomplete="email" required placeholder="alex@example.com">
+            </div>
+          </div>
+          <div class="field">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" required placeholder="I would like to learn more..."></textarea>
+          </div>
+          <button class="button button-primary" type="submit">Submit demo form</button>
+          <p class="form-status" id="formStatus" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <span>© <span id="year"></span> GA4 Learning Shop</span>
+      <span>Demo only · No real payment or form submission</span>
+    </div>
+  </footer>
+
+  <div class="overlay" id="productOverlay" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
+    <div class="modal">
+      <button class="icon-button" type="button" data-close="productOverlay" aria-label="Close product details">×</button>
+      <div class="modal-product">
+        <div class="modal-visual" id="modalIcon" aria-hidden="true"></div>
+        <div>
+          <p class="eyebrow" id="modalCategory"></p>
+          <h3 id="productModalTitle"></h3>
+          <p id="modalDescription"></p>
+          <p class="product-price" id="modalPrice"></p>
+          <button class="button button-primary button-full" id="modalAdd" type="button">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="cartOverlay" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
+    <div class="modal">
+      <button class="icon-button" type="button" data-close="cartOverlay" aria-label="Close shopping cart">×</button>
+      <h3 id="cartTitle">Your demo cart</h3>
+      <div id="cartContent"></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="checkoutOverlay" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
+    <div class="modal">
+      <button class="icon-button" type="button" data-close="checkoutOverlay" aria-label="Close checkout">×</button>
+      <div id="checkoutContent"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    /*
+      DATA LAYER FOUNDATION
+      -------------------------------------------------------------
+      Keeping the dataLayer available before any GTM snippet is added
+      makes this file safe to test now and easy to connect later.
+
+      Open the browser console and type: dataLayer
+      to inspect every demo event generated during your visit.
+    */
+    window.dataLayer = window.dataLayer || [];
+
+    const products = [
+      {
+        id: "plant_001",
+        name: "Focus Plant",
+        category: "Desk essentials",
+        price: 18.00,
+        icon: "🪴",
+        visualClass: "visual-1",
+        description: "A cheerful little desk plant for focused analytics sessions."
+      },
+      {
+        id: "mug_002",
+        name: "Metric Mug",
+        category: "Drinkware",
+        price: 14.00,
+        icon: "☕",
+        visualClass: "visual-2",
+        description: "A sturdy mug for coffee, tea, and long DebugView sessions."
+      },
+      {
+        id: "notebook_003",
+        name: "Insight Notebook",
+        category: "Stationery",
+        price: 12.00,
+        icon: "📓",
+        visualClass: "visual-3",
+        description: "A compact notebook for event plans, questions, and insights."
+      }
+    ];
+
+    let cart = [];
+    let activeProductId = null;
+    let toastTimer;
+
+    const money = value => new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD"
+    }).format(value);
+
+    // Convert a product into GA4's recommended ecommerce item structure.
+    function ga4Item(product, quantity = 1) {
+      return {
+        item_id: product.id,
+        item_name: product.name,
+        item_category: product.category,
+        price: product.price,
+        quantity
+      };
+    }
+
+    // All practice events pass through this helper for easy future editing.
+    function trackEvent(eventName, parameters = {}) {
+      window.dataLayer.push({ event: eventName, ...parameters });
+      console.log(`[dataLayer] ${eventName}`, parameters);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 2300);
+    }
+
+    function renderProducts() {
+      document.getElementById("productGrid").innerHTML = products.map(product => `
+        <article class="product-card">
+          <div class="product-visual ${product.visualClass}" aria-hidden="true">${product.icon}</div>
+          <div class="product-body">
+            <div class="product-meta">
+              <h3 class="product-name">${product.name}</h3>
+              <span class="product-price">${money(product.price)}</span>
+            </div>
+            <p class="product-description">${product.description}</p>
+            <div class="product-actions">
+              <button class="button button-secondary" type="button" data-view="${product.id}">View Product</button>
+              <button class="button button-primary" type="button" data-add="${product.id}">Add to Cart</button>
+            </div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function openOverlay(id) {
+      document.getElementById(id).classList.add("open");
+      document.body.style.overflow = "hidden";
+      setTimeout(() => document.querySelector(`#${id} button`)?.focus(), 0);
+    }
+
+    function closeOverlay(id) {
+      document.getElementById(id).classList.remove("open");
+      if (!document.querySelector(".overlay.open")) document.body.style.overflow = "";
+    }
+
+    function viewProduct(productId) {
+      const product = products.find(item => item.id === productId);
+      if (!product) return;
+      activeProductId = productId;
+      document.getElementById("modalIcon").textContent = product.icon;
+      document.getElementById("modalCategory").textContent = product.category;
+      document.getElementById("productModalTitle").textContent = product.name;
+      document.getElementById("modalDescription").textContent = product.description;
+      document.getElementById("modalPrice").textContent = money(product.price);
+
+      trackEvent("select_item", {
+        item_list_id: "demo_catalog",
+        item_list_name: "Demo Catalog",
+        items: [ga4Item(product)]
+      });
+      trackEvent("view_item", {
+        currency: "USD",
+        value: product.price,
+        items: [ga4Item(product)]
+      });
+      openOverlay("productOverlay");
+    }
+
+    function addToCart(productId) {
+      const product = products.find(item => item.id === productId);
+      if (!product) return;
+      const existing = cart.find(item => item.id === productId);
+      if (existing) existing.quantity += 1;
+      else cart.push({ ...product, quantity: 1 });
+
+      trackEvent("add_to_cart", {
+        currency: "USD",
+        value: product.price,
+        items: [ga4Item(product)]
+      });
+      updateCartCount();
+      showToast(`${product.name} added · add_to_cart`);
+    }
+
+    function updateCartCount() {
+      document.getElementById("cartCount").textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+    }
+
+    function cartTotal() {
+      return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    }
+
+    function renderCart() {
+      const content = document.getElementById("cartContent");
+      if (!cart.length) {
+        content.innerHTML = `<div class="empty-cart">Your cart is empty.<br>Add a product to continue.</div>`;
+        return;
+      }
+      content.innerHTML = `
+        <div class="cart-list">
+          ${cart.map(item => `
+            <div class="cart-item">
+              <span class="cart-item-icon" aria-hidden="true">${item.icon}</span>
+              <span><strong>${item.name}</strong><small>${money(item.price)} × ${item.quantity}</small></span>
+              <button class="remove-button" type="button" data-remove="${item.id}" aria-label="Remove ${item.name}">Remove</button>
+            </div>
+          `).join("")}
+        </div>
+        <div class="cart-total"><strong>Total</strong><strong>${money(cartTotal())}</strong></div>
+        <button class="button button-primary button-full" id="buyNow" type="button">Buy Now</button>
+      `;
+    }
+
+    function removeFromCart(productId) {
+      cart = cart.filter(item => item.id !== productId);
+      updateCartCount();
+      renderCart();
+    }
+
+    function beginCheckout() {
+      const value = cartTotal();
+      trackEvent("begin_checkout", {
+        currency: "USD",
+        value,
+        items: cart.map(item => ga4Item(item, item.quantity))
+      });
+      closeOverlay("cartOverlay");
+      document.getElementById("checkoutContent").innerHTML = `
+        <p class="eyebrow">Demo checkout</p>
+        <h3 id="checkoutTitle">Ready to test purchase?</h3>
+        <p>No payment details are needed. This button only simulates a successful order and creates a GA4-style <code>purchase</code> event.</p>
+        <div class="order-summary">
+          ${cart.map(item => `<div>${item.name} × ${item.quantity} — ${money(item.price * item.quantity)}</div>`).join("")}
+          <div class="cart-total"><strong>Total</strong><strong>${money(value)}</strong></div>
+        </div>
+        <button class="button button-primary button-full" id="completePurchase" type="button">Complete Demo Purchase</button>
+      `;
+      openOverlay("checkoutOverlay");
+    }
+
+    function completePurchase() {
+      const transactionId = `DEMO-${Date.now()}`;
+      const value = cartTotal();
+      const purchasedItems = cart.map(item => ga4Item(item, item.quantity));
+
+      trackEvent("purchase", {
+        transaction_id: transactionId,
+        currency: "USD",
+        value,
+        tax: 0,
+        shipping: 0,
+        items: purchasedItems
+      });
+
+      document.getElementById("checkoutContent").innerHTML = `
+        <div class="thank-you">
+          <div class="success-mark" aria-hidden="true">✓</div>
+          <p class="eyebrow">Thank you</p>
+          <h3 id="checkoutTitle">Demo purchase complete!</h3>
+          <p>Your simulated order was successful. Check <code>dataLayer</code>, GTM Preview, or GA4 DebugView to inspect the purchase event.</p>
+          <div class="order-summary"><strong>Transaction ID</strong><br>${transactionId}<br><br><strong>Demo total</strong><br>${money(value)}</div>
+          <button class="button button-secondary button-full" type="button" data-close="checkoutOverlay">Continue Learning</button>
+        </div>
+      `;
+      cart = [];
+      updateCartCount();
+    }
+
+    document.getElementById("productGrid").addEventListener("click", event => {
+      const viewButton = event.target.closest("[data-view]");
+      const addButton = event.target.closest("[data-add]");
+      if (viewButton) viewProduct(viewButton.dataset.view);
+      if (addButton) addToCart(addButton.dataset.add);
+    });
+
+    document.getElementById("modalAdd").addEventListener("click", () => {
+      addToCart(activeProductId);
+      closeOverlay("productOverlay");
+    });
+
+    document.getElementById("openCart").addEventListener("click", () => {
+      renderCart();
+      openOverlay("cartOverlay");
+    });
+
+    document.getElementById("cartContent").addEventListener("click", event => {
+      const removeButton = event.target.closest("[data-remove]");
+      if (removeButton) removeFromCart(removeButton.dataset.remove);
+      if (event.target.closest("#buyNow")) beginCheckout();
+    });
+
+    document.getElementById("checkoutContent").addEventListener("click", event => {
+      if (event.target.closest("#completePurchase")) completePurchase();
+      const closeButton = event.target.closest("[data-close]");
+      if (closeButton) closeOverlay(closeButton.dataset.close);
+    });
+
+    document.getElementById("contactForm").addEventListener("submit", event => {
+      event.preventDefault();
+      trackEvent("generate_lead", {
+        form_id: "contact_form",
+        form_name: "Demo Contact Form",
+        lead_source: "learning_shop"
+      });
+      event.currentTarget.reset();
+      document.getElementById("formStatus").textContent = "Demo submitted — generate_lead added to dataLayer.";
+    });
+
+    document.addEventListener("click", event => {
+      const closeButton = event.target.closest("[data-close]");
+      if (closeButton) closeOverlay(closeButton.dataset.close);
+      if (event.target.classList.contains("overlay")) closeOverlay(event.target.id);
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        document.querySelectorAll(".overlay.open").forEach(overlay => closeOverlay(overlay.id));
+      }
+    });
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+    renderProducts();
+
+    // Recommended ecommerce event fired once when the catalog becomes visible.
+    trackEvent("view_item_list", {
+      item_list_id: "demo_catalog",
+      item_list_name: "Demo Catalog",
+      items: products.map(product => ga4Item(product))
+    });
+  </script>
+</body>
+</html>
