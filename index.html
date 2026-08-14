@@ -22,7 +22,7 @@
 
     This demo already pushes structured events to window.dataLayer:
     view_item_list, select_item, view_item, add_to_cart,
-    begin_checkout, purchase, and generate_lead.
+    begin_checkout, purchase, generate_lead, and select_content.
   -->
 
   <style>
@@ -300,6 +300,31 @@
     .learning-item strong { display: block; margin-bottom: 4px; color: var(--accent); font-size: 0.8rem; letter-spacing: .08em; text-transform: uppercase; }
     .learning-item span { color: rgba(255,255,255,.76); font-size: .91rem; }
 
+    .blog-section { background: #eef1eb; }
+    .article-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .article-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+      box-shadow: 0 3px 0 rgba(35, 54, 44, 0.02);
+    }
+    .article-visual {
+      min-height: 170px;
+      display: grid;
+      place-items: center;
+      font-size: 3.5rem;
+      background: linear-gradient(145deg, #dfeae1, #fae8c8);
+    }
+    .article-card:nth-child(2) .article-visual { background: linear-gradient(145deg, #e3e5ee, #dfeae1); }
+    .article-card:nth-child(3) .article-visual { background: linear-gradient(145deg, #fae8c8, #f2d9d3); }
+    .article-body { padding: 23px; }
+    .article-meta { margin: 0 0 8px; color: var(--brand); font-size: .76rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+    .article-card h3 { margin: 0; font-family: Georgia, serif; font-size: 1.48rem; font-weight: 500; line-height: 1.2; }
+    .article-card p { color: var(--muted); }
+    .article-link { color: var(--brand); font-weight: 800; text-decoration: none; }
+    .article-link:hover { text-decoration: underline; }
+
     .contact-wrap {
       display: grid;
       grid-template-columns: 0.9fr 1.1fr;
@@ -406,7 +431,7 @@
       .hero-grid, .contact-wrap { grid-template-columns: 1fr; }
       .hero { padding-top: 62px; }
       .hero-art { min-height: 360px; }
-      .products { grid-template-columns: 1fr; }
+      .products, .article-grid { grid-template-columns: 1fr; }
       .product-description { min-height: auto; }
       .learning-strip { grid-template-columns: 1fr; }
       .contact-wrap { padding: 30px; }
@@ -446,6 +471,7 @@
       </a>
       <nav class="nav-links" aria-label="Main navigation">
         <a href="#products">Products</a>
+        <a href="#blog">Blog</a>
         <a href="#contact">Contact</a>
         <button class="cart-button" id="openCart" type="button" aria-label="Open shopping cart">
           Cart <span class="cart-count" id="cartCount">0</span>
@@ -463,6 +489,7 @@
           <p class="hero-copy">Click, add, submit, and buy your way through a tiny demo store built for hands-on GA4 and Google Tag Manager practice.</p>
           <div class="button-row">
             <a class="button button-primary" href="#products">Explore products</a>
+            <a class="button button-secondary" href="#blog">Read the blog</a>
             <a class="button button-secondary" href="#contact">Try the form</a>
           </div>
         </div>
@@ -497,6 +524,20 @@
         <div class="learning-item"><strong>Step 01</strong><span>Open a product to practice <code>select_item</code> and <code>view_item</code>.</span></div>
         <div class="learning-item"><strong>Step 02</strong><span>Add something to the cart to practice <code>add_to_cart</code>.</span></div>
         <div class="learning-item"><strong>Step 03</strong><span>Complete the demo order to practice <code>begin_checkout</code> and <code>purchase</code>.</span></div>
+      </div>
+    </section>
+
+    <section class="blog-section" id="blog">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">GA4 learning blog</p>
+            <h2>Learn one event at a time</h2>
+            <p class="section-copy">Three short guides turn this demo shop into a content analytics practice site.</p>
+          </div>
+          <a class="button button-secondary" href="blog/" data-blog-index>View all articles</a>
+        </div>
+        <div class="article-grid" id="articleGrid" aria-label="Latest blog articles"></div>
       </div>
     </section>
 
@@ -611,6 +652,36 @@
       }
     ];
 
+    const articles = [
+      {
+        id: "ga4-basics",
+        title: "GA4 Events: A Practical Beginner's Guide",
+        category: "GA4 Basics",
+        date: "August 14, 2026",
+        icon: "📊",
+        excerpt: "Understand events, parameters, and why a clear measurement plan matters.",
+        url: "blog/ga4-basics.html"
+      },
+      {
+        id: "gtm-data-layer",
+        title: "How the dataLayer Connects Your Site to GTM",
+        category: "Google Tag Manager",
+        date: "August 14, 2026",
+        icon: "🏷️",
+        excerpt: "Follow the journey from a button click to a clean event in GA4.",
+        url: "blog/gtm-data-layer.html"
+      },
+      {
+        id: "ecommerce-funnel",
+        title: "Reading a Simple Ecommerce Funnel in GA4",
+        category: "Analysis",
+        date: "August 14, 2026",
+        icon: "🛒",
+        excerpt: "Connect product views, carts, checkouts, and purchases into one useful story.",
+        url: "blog/ecommerce-funnel.html"
+      }
+    ];
+
     let cart = [];
     let activeProductId = null;
     let toastTimer;
@@ -662,6 +733,37 @@
           </div>
         </article>
       `).join("");
+    }
+
+    function renderArticles() {
+      document.getElementById("articleGrid").innerHTML = articles.map(article => `
+        <article class="article-card">
+          <div class="article-visual" aria-hidden="true">${article.icon}</div>
+          <div class="article-body">
+            <p class="article-meta">${article.category} · ${article.date}</p>
+            <h3>${article.title}</h3>
+            <p>${article.excerpt}</p>
+            <a class="article-link" href="${article.url}" data-article-id="${article.id}">Read article →</a>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function trackArticleSelection(article, destination) {
+      let navigated = false;
+      const continueToArticle = () => {
+        if (navigated) return;
+        navigated = true;
+        window.location.href = destination;
+      };
+      trackEvent("select_content", {
+        content_type: "blog_article",
+        item_id: article.id,
+        content_title: article.title,
+        eventCallback: continueToArticle,
+        eventTimeout: 900
+      });
+      setTimeout(continueToArticle, 950);
     }
 
     function openOverlay(id) {
@@ -805,6 +907,19 @@
       if (addButton) addToCart(addButton.dataset.add);
     });
 
+    document.getElementById("articleGrid").addEventListener("click", event => {
+      const articleLink = event.target.closest("[data-article-id]");
+      if (!articleLink) return;
+      event.preventDefault();
+      const article = articles.find(item => item.id === articleLink.dataset.articleId);
+      if (article) trackArticleSelection(article, articleLink.href);
+    });
+
+    document.querySelector("[data-blog-index]").addEventListener("click", event => {
+      event.preventDefault();
+      trackArticleSelection({ id: "blog_index", title: "All Blog Articles" }, event.currentTarget.href);
+    });
+
     document.getElementById("modalAdd").addEventListener("click", () => {
       addToCart(activeProductId);
       closeOverlay("productOverlay");
@@ -852,6 +967,7 @@
 
     document.getElementById("year").textContent = new Date().getFullYear();
     renderProducts();
+    renderArticles();
 
     // Recommended ecommerce event fired once when the catalog becomes visible.
     trackEvent("view_item_list", {
