@@ -22,7 +22,8 @@
 
     This demo already pushes structured events to window.dataLayer:
     view_item_list, select_item, view_item, add_to_cart,
-    begin_checkout, purchase, generate_lead, and select_content.
+    begin_checkout, purchase, generate_lead, select_content,
+    and view_search_results.
   -->
 
   <style>
@@ -42,6 +43,18 @@
     }
 
     * { box-sizing: border-box; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
 
     html { scroll-behavior: smooth; }
 
@@ -254,6 +267,33 @@
     h2 { margin: 0; font-family: Georgia, serif; font-size: clamp(2.15rem, 4vw, 3.25rem); font-weight: 500; letter-spacing: -0.04em; }
     .section-copy { max-width: 520px; margin: 10px 0 0; color: var(--muted); }
 
+    .search-section { padding-top: 24px; }
+    .search-panel {
+      padding: 34px;
+      border: 1px solid var(--line);
+      border-radius: 25px;
+      background: white;
+      box-shadow: var(--shadow);
+    }
+    .search-form { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 22px; }
+    .search-form input { height: 52px; padding-inline: 16px; }
+    .search-summary { min-height: 25px; margin: 18px 0 0; color: var(--muted); font-weight: 700; }
+    .search-results { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 14px; }
+    .search-result {
+      display: grid;
+      grid-template-columns: 48px 1fr auto;
+      align-items: center;
+      gap: 13px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--paper);
+    }
+    .search-result-icon { font-size: 1.8rem; text-align: center; }
+    .search-result strong { display: block; }
+    .search-result small { color: var(--muted); }
+    .search-result .button { min-height: 40px; padding: 8px 12px; font-size: .84rem; }
+
     .products {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -435,6 +475,7 @@
       .product-description { min-height: auto; }
       .learning-strip { grid-template-columns: 1fr; }
       .contact-wrap { padding: 30px; }
+      .search-results { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 560px) {
@@ -448,6 +489,10 @@
       .field-grid, .modal-product { grid-template-columns: 1fr; }
       .modal-visual { min-height: 180px; }
       .contact-wrap { padding: 22px; }
+      .search-panel { padding: 22px; }
+      .search-form { grid-template-columns: 1fr; }
+      .search-result { grid-template-columns: 42px 1fr; }
+      .search-result .button { grid-column: 1 / -1; }
       section { padding: 58px 0; }
     }
 
@@ -470,6 +515,7 @@
         <span>GA4 Learning Shop</span>
       </a>
       <nav class="nav-links" aria-label="Main navigation">
+        <a href="#search">Search</a>
         <a href="#products">Products</a>
         <a href="#blog">Blog</a>
         <a href="#contact">Contact</a>
@@ -501,6 +547,23 @@
             <div><strong>Small actions.</strong><span>Useful data.</span></div>
           </div>
           <div class="floating-note">✓ dataLayer ready</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="search-section" id="search">
+      <div class="container">
+        <div class="search-panel">
+          <p class="eyebrow">Site search practice</p>
+          <h2>What would you like to find?</h2>
+          <p class="section-copy">Search all demo products and learning articles. Try “GA4”, “cart”, “mug”, or “dataLayer”.</p>
+          <form class="search-form" id="siteSearchForm" role="search">
+            <label class="sr-only" for="siteSearchInput">Search the site</label>
+            <input id="siteSearchInput" name="q" type="search" autocomplete="off" placeholder="Search products and articles…" required>
+            <button class="button button-primary" type="submit">Search</button>
+          </form>
+          <p class="search-summary" id="searchSummary" role="status" aria-live="polite">Enter a keyword to begin.</p>
+          <div class="search-results" id="searchResults" aria-label="Search results"></div>
         </div>
       </div>
     </section>
@@ -749,6 +812,58 @@
       `).join("");
     }
 
+    function normalizeSearch(value) {
+      return value.trim().toLocaleLowerCase();
+    }
+
+    function runSiteSearch(term) {
+      const query = normalizeSearch(term);
+      const resultContainer = document.getElementById("searchResults");
+      const summary = document.getElementById("searchSummary");
+      if (!query) {
+        resultContainer.innerHTML = "";
+        summary.textContent = "Enter a keyword to begin.";
+        return;
+      }
+
+      const productMatches = products.filter(product =>
+        [product.name, product.category, product.description].some(value => normalizeSearch(value).includes(query))
+      );
+      const articleMatches = articles.filter(article =>
+        [article.title, article.category, article.excerpt].some(value => normalizeSearch(value).includes(query))
+      );
+
+      trackEvent("view_search_results", { search_term: term.trim() });
+
+      const results = [
+        ...productMatches.map(product => ({
+          type: "Product",
+          icon: product.icon,
+          title: product.name,
+          detail: `${product.category} · ${money(product.price)}`,
+          action: `<button class="button button-secondary" type="button" data-search-product="${product.id}">View</button>`
+        })),
+        ...articleMatches.map(article => ({
+          type: "Article",
+          icon: article.icon,
+          title: article.title,
+          detail: article.category,
+          action: `<a class="button button-secondary" href="${article.url}" data-search-article="${article.id}">Read</a>`
+        }))
+      ];
+
+      summary.textContent = results.length
+        ? `${results.length} result${results.length === 1 ? "" : "s"} for “${term.trim()}”.`
+        : `No results for “${term.trim()}”. Try GA4, cart, mug, or dataLayer.`;
+      resultContainer.innerHTML = results.map(result => `
+        <article class="search-result">
+          <span class="search-result-icon" aria-hidden="true">${result.icon}</span>
+          <span><strong>${result.title}</strong><small>${result.type} · ${result.detail}</small></span>
+          ${result.action}
+        </article>
+      `).join("");
+    }
+
     function trackArticleSelection(article, destination) {
       let navigated = false;
       const continueToArticle = () => {
@@ -951,6 +1066,22 @@
       });
       event.currentTarget.reset();
       document.getElementById("formStatus").textContent = "Demo submitted — generate_lead added to dataLayer.";
+    });
+
+    document.getElementById("siteSearchForm").addEventListener("submit", event => {
+      event.preventDefault();
+      runSiteSearch(document.getElementById("siteSearchInput").value);
+    });
+
+    document.getElementById("searchResults").addEventListener("click", event => {
+      const productButton = event.target.closest("[data-search-product]");
+      if (productButton) viewProduct(productButton.dataset.searchProduct);
+
+      const articleLink = event.target.closest("[data-search-article]");
+      if (!articleLink) return;
+      event.preventDefault();
+      const article = articles.find(item => item.id === articleLink.dataset.searchArticle);
+      if (article) trackArticleSelection(article, articleLink.href);
     });
 
     document.addEventListener("click", event => {
