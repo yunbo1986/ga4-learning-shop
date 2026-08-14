@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://yunbo1986.github.io/ga4-learning-shop/sitemap.xml
